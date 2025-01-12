@@ -1,3 +1,4 @@
-google-generativeai
+google.generativeai
 python-dotenv
-pillow
+ipython
+requests
