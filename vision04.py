@@ -9,17 +9,15 @@ load_dotenv()
 # Configure API key
 genai.configure(api_key=os.getenv("GOOGLE_GEMINI_1_5_API_KEY"))
 
-# Define the paths to the image files
-image_paths = ["uploads/p03.png", "uploads/p04.png", "uploads/p05.png", "uploads/p06.png", "uploads/p07.png", "uploads/p08.png", "uploads/p09.png", "uploads/p10.png"]  # Add paths to multiple images
+# Define the path to the image file
+image_path = "uploads/p11.png"  # Use the p01.png file from the uploads directory
 
-# Open the images using PIL and store them in a list
-images = []
-for path in image_paths:
-    try:
-        images.append(Image.open(path))
-    except FileNotFoundError:
-        print(f"Error: The file '{path}' was not found. Ensure the path is correct.")
-        exit(1)
+# Open the image using PIL
+try:
+    sample_image = Image.open(image_path)
+except FileNotFoundError:
+    print(f"Error: The file '{image_path}' was not found. Ensure the path is correct.")
+    exit(1)
 
 # Choose a Gemini model
 model = genai.GenerativeModel(model_name="gemini-2.0-flash-exp")
@@ -36,8 +34,8 @@ def chat_with_model():
             break
         
         try:
-            # Generate content using the prompt and all images
-            response = model.generate_content([user_input, *images])
+            # Generate content using the image and user input
+            response = model.generate_content([user_input, sample_image])
             print("\nGemini's Response:")
             print(response.text)
         except Exception as e:
@@ -46,4 +44,3 @@ def chat_with_model():
 # Start the chat
 if __name__ == "__main__":
     chat_with_model()
-
