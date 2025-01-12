@@ -1,9 +1,6 @@
 # Ignore all .pdf files in the uploads directory
 uploads/*.pdf
 
-# Ignore all .png files in the uploads directory
-uploads/*.png
-
 # Ignore all .mp4 files in the uploads directory
 uploads/*.mp4
 
