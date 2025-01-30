@@ -38,7 +38,7 @@ def chat_with_model():
     # Load existing conversation data (if any)
     data = {"messages": []}
     try:
-        with open(data_filename, "r") as f:           
+        with open(data_filename, "r") as f:       
             previous_data = json.load(f)
             data["messages"] = previous_data.get("messages", [])
     except FileNotFoundError:
