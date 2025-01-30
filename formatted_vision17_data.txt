@@ -1,4 +1,4 @@
-﻿User: Based on this project full structure, which is covered in all four iamges, can you deep dive into this structure, and explain how I should push this to Github? 
+User: Based on this project full structure, which is covered in all four iamges, can you deep dive into this structure, and explain how I should push this to Github? 
 
 Assistant: Okay, let's break down this project structure and how to push it to GitHub.
 

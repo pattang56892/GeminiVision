@@ -15,8 +15,8 @@ genai.configure(api_key=os.getenv("GOOGLE_GEMINI_1_5_API_KEY"))
 script_name = os.path.splitext(os.path.basename(__file__))[0]  
 data_filename = f"{script_name}_data.json"
 
-# Paths to local images
-image_paths = ["uploads/p28.png", "uploads/p29.png"]
+# Define the path to the image file
+image_paths = ["uploads/p30.png", "uploads/p34.png"]
 
 # Attempt to open the images
 images = []
@@ -38,7 +38,7 @@ def chat_with_model():
     # Load existing conversation data (if any)
     data = {"messages": []}
     try:
-        with open(data_filename, "r") as f:           
+        with open(data_filename, "r") as f:
             previous_data = json.load(f)
             data["messages"] = previous_data.get("messages", [])
     except FileNotFoundError:
