@@ -16,7 +16,7 @@ script_name = os.path.splitext(os.path.basename(__file__))[0]
 data_filename = f"{script_name}_data.json"
 
 # Define the path to the image file
-image_paths = ["uploads/p30.png", "uploads/p34.png"]
+image_paths = ["uploads/p34.png", "uploads/p35.png"]
 
 # Attempt to open the images
 images = []
