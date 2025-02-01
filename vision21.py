@@ -2,10 +2,12 @@ import os
 import json
 import re
 import base64
+import textwrap
 from datetime import datetime
 import google.generativeai as genai
 from dotenv import load_dotenv
 from PIL import Image
+
 
 # ✅ Handle timezone correctly
 try:
@@ -99,7 +101,7 @@ def save_messages_incrementally(file_path, user_message, assistant_message):
             print(f"❌ Error writing to JSON file: {e}")
 
 # ✅ Convert conversation data into readable text format
-def format_conversation_to_text(input_path, output_path):
+def format_conversation_to_text(input_path, output_path, max_width=80):  # Added max_width
     try:
         with open(input_path, 'r', encoding="utf-8") as f:
             data = json.load(f)
@@ -118,8 +120,10 @@ def format_conversation_to_text(input_path, output_path):
             else:
                 role_label = f"Unknown role {role}"
 
-            output_lines.append(f"[{timestamp}] {role_label}: {content}")
-            output_lines.append("")  # Add a blank line for spacing
+            # Wrap the content using textwrap
+            wrapped_content = textwrap.fill(content, width=max_width)
+            output_lines.append(f"[{timestamp}] {role_label}: {wrapped_content}")
+            output_lines.append("")
 
         with open(output_path, 'w', encoding="utf-8") as f:
             f.write('\n'.join(output_lines))
