@@ -4,10 +4,10 @@ import re
 import base64
 import textwrap
 from datetime import datetime
+from typing import Optional
 import google.generativeai as genai
 from dotenv import load_dotenv
-from PIL import Image
-
+from PIL import Image  # Keep PIL import, might be useful for future image manipulation
 
 # ✅ Handle timezone correctly
 try:
@@ -33,47 +33,66 @@ data_filename = f"{script_name}_data.json"
 # ✅ Generate a session ID for tracking
 session_id = f"session_{datetime.now(EASTERN_TIME).strftime('%Y%m%d_%H%M%S')}"
 
-# Define the path to the image file
-image_paths = ["uploads/p01.png", "uploads/p02.png", "uploads/p03.png", "uploads/p04.png", "uploads/p05.png"]
-
-# ✅ Function to load images as Base64
-def load_image_as_base64(image_path):
-    """Reads an image file and converts it to Base64 format."""
+# ✅ Function to load images as Base64 (Improved Version)
+def load_image_as_base64(image_path: str) -> Optional[dict]:
+    """Reads an image file and converts it to Base64 format, handling errors.
+    Returns a dictionary with MIME type and data, or None on failure.
+    """
     if not os.path.exists(image_path):
-        print(f"⚠️ Warning: The file '{image_path}' was not found. Skipping it.")
+        print(f"⚠️ Warning: The file '{image_path}' was not found. Skipping.")
         return None
 
     try:
         with open(image_path, "rb") as img_file:
-            base64_str = base64.b64encode(img_file.read()).decode("utf-8")
-            mime_type = "image/png"
+            data = base64.b64encode(img_file.read()).decode("utf-8")
+        # Use a dictionary for MIME types (more maintainable)
+        mime_types = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",  # Handle both .jpg and .jpeg
+            ".gif": "image/gif",
+            ".webp": "image/webp",
+        }
+        ext = os.path.splitext(image_path)[1].lower()
+        mime_type = mime_types.get(ext)  # Use .get() for safety
 
-            if image_path.lower().endswith((".jpg", ".jpeg")):
-                mime_type = "image/jpeg"
-            elif image_path.lower().endswith(".gif"):
-                mime_type = "image/gif"
-            elif image_path.lower().endswith(".webp"):
-                mime_type = "image/webp"
+        if mime_type is None:
+            print(f"⚠️ Warning: Unsupported image format for {image_path}")
+            return None  # Or raise an exception if it's a critical error
 
-            return {"mime_type": mime_type, "data": base64_str}
+        return {"mime_type": mime_type, "data": data}
 
     except Exception as e:
         print(f"❌ Error loading image '{image_path}': {e}")
         return None
 
-# ✅ Attempt to load images
-images = [img for path in image_paths if (img := load_image_as_base64(path))]
+# --- Main image loading logic ---
+# Define three upload folders with their respective filename ranges and formats
+upload_folders = [
+    ("uploads01", range(1, 20), "p{num:02d}.png"),   # p01.png to p19.png
+    ("uploads02", range(21, 30), "p{num:03d}.png"),   # p021.png to p029.png
+    ("uploads03", range(31, 40), "p{num:03d}.png"),   # p031.png to p039.png
+]
 
-# ✅ Generate response from image & text with error handling
-def generate_response(prompt):
-    contents = images + [prompt]
+# Load images from all folders using the specified filename format
+images = []
+for folder, num_range, fmt in upload_folders:
+    for num in num_range:
+        filename = fmt.format(num=num)
+        full_path = os.path.join(folder, filename)
+        img = load_image_as_base64(full_path)
+        if img is not None:
+            images.append(img)
 
+# ✅ Generate response from image & text with error handling (Improved Version)
+def generate_response(prompt: str) -> Optional[str]:
+    contents = images + [prompt]  # Concatenate the list of image dicts with the prompt
     try:
         response = model.generate_content(contents)
         return response.text
     except Exception as e:
         print(f"❌ Error processing your request: {e}")
-        return None  # Prevent saving error messages as valid responses
+        return None  # Or handle the error as appropriate
 
 # ✅ Load existing conversation history
 def load_existing_conversation(file_path):
@@ -81,7 +100,7 @@ def load_existing_conversation(file_path):
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 existing_data = json.load(f)
-                return existing_data.get("messages", [])
+            return existing_data.get("messages", [])
         except json.JSONDecodeError:
             return []
     return []
@@ -93,20 +112,20 @@ def save_messages_incrementally(file_path, user_message, assistant_message):
     # ✅ Add only valid messages
     if assistant_message["content"]:
         # Prepend new messages
-        messages.insert(0, assistant_message) # Insert assistant message at index 0
-        messages.insert(0, user_message)      # Insert user message at index 0
-        try:
-           with open(file_path, "w", encoding="utf-8") as f:
-                json.dump({"messages": messages}, f, ensure_ascii=False, indent=4)
-        except IOError as e:
-            print(f"❌ Error writing to JSON file: {e}")
+        messages.insert(0, assistant_message)  # Insert assistant message at index 0
+        messages.insert(0, user_message)         # Insert user message at index 0
+    try:
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump({"messages": messages}, f, ensure_ascii=False, indent=4)
+    except IOError as e:
+        print(f"❌ Error writing to JSON file: {e}")
 
 # ✅ Convert conversation data into readable text format
 def format_conversation_to_text(input_path, output_path, max_width=80, indent_size=4):
     try:
         with open(input_path, 'r', encoding="utf-8") as f:
             data = json.load(f)
-            messages = data.get('messages', [])
+        messages = data.get('messages', [])
 
         output_lines = []
         indent = " " * indent_size
@@ -124,20 +143,20 @@ def format_conversation_to_text(input_path, output_path, max_width=80, indent_si
 
             # Split the content into lines, handle multiline content
             content_lines = content.splitlines()
-            
+
             formatted_lines = []
             for line in content_lines:
                 # Wrap each line individually.
                 wrapped_line = textwrap.fill(line, width=max_width - indent_size)
                 formatted_lines.extend([f"{indent}{wrapped_line_part}" for wrapped_line_part in wrapped_line.splitlines()])
-            
+
             output_lines.append(f"[{timestamp}] {role_label}:")
             output_lines.extend(formatted_lines)
 
             # Add an extra blank line after the content if it contained blank lines
             if any(not line.strip() for line in content_lines):
-                 output_lines.append("")
-            output_lines.append("")
+                output_lines.append("")
+                output_lines.append("")
 
         with open(output_path, 'w', encoding="utf-8") as f:
             f.write('\n'.join(output_lines))
