@@ -34,7 +34,7 @@ data_filename = f"{script_name}_data.json"
 session_id = f"session_{datetime.now(EASTERN_TIME).strftime('%Y%m%d_%H%M%S')}"
 
 # Define the path to the image file
-image_paths = ["uploads/p01.png"]
+image_paths = ["uploads/p10.png"]
 
 # ✅ Function to load images as Base64
 def load_image_as_base64(image_path):
